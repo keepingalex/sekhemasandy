@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PoE2 Trial of the Sekhemas Setup Simulator</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="app-layout">
+        
+        <aside class="sidebar-left" id="palette-panel">
+            
+            <div class="sidebar-panel">
+                <div class="panel-header">BASES</div>
+                <div class="palette-grid" id="palette-bases"></div>
+            </div>
+            
+            <div class="sidebar-panel">
+                <div class="panel-header">UNIQUES</div>
+                <div class="palette-grid" id="palette-uniques"></div>
+            </div>
+
+            <div class="sidebar-panel" style="flex-grow: 1;">
+                <div class="panel-header">YOUR RELICS (SAVED)</div>
+                <div class="inventory-list" id="palette-inventory">
+                    <span style="color: #666; font-size: 0.8rem; font-style: italic;">Craft a relic to save it here.</span>
+                </div>
+                
+                <div class="trash-zone" id="trash-zone">
+                    🗑️ Drag grid items here to delete
+                </div>
+            </div>
+        </aside>
+
+        <main class="center-stage">
+            <div class="poe-altar-frame"> 
+                
+                <div class="poe-header">
+                    <div class="poe-btn-round poe-btn-info">i</div>
+                    <div class="poe-title">RELIC ALTAR</div>
+                    <div class="poe-btn-round poe-btn-close">x</div>
+                </div>
+
+                <div class="poe-grid-surround">
+                    <div class="poe-pillar"></div>
+                    <div class="poe-grid-bezel">
+                        <div class="grid-container" id="relic-grid"></div>
+                    </div>
+                    <div class="poe-pillar"></div>
+                </div>
+                
+            </div> </main>
+
+        <aside class="sidebar-right" id="stats-panel">
+            
+            <div class="sidebar-panel" style="flex-grow: 1;">
+                <div class="panel-header">ACTIVE BONUSES</div>
+                <div class="stats-list" id="stats-list">
+                    <span class="empty-stats">No relics placed.</span>
+                </div>
+            </div>
+
+            <div class="sidebar-panel" style="margin-top: auto;">
+                <div class="panel-header" style="font-size: 0.9rem;">LAYOUTS</div>
+                <div class="layout-buttons">
+                    <button id="btn-save-1" onclick="saveLayout(1)">Save 1</button>
+                    <button id="btn-load-1" onclick="loadLayout(1)">Load 1</button>
+                    <button id="btn-save-2" onclick="saveLayout(2)">Save 2</button>
+                    <button id="btn-load-2" onclick="loadLayout(2)">Load 2</button>
+                    <button id="btn-save-3" onclick="saveLayout(3)">Save 3</button>
+                    <button id="btn-load-3" onclick="loadLayout(3)">Load 3</button>
+                    <button onclick="clearGrid()" class="danger-btn">Clear All</button>
+                </div>
+            </div>
+
+        </aside>
+
+    </div>
+
+    <div id="craft-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">CONFIGURE RELIC <span id="close-modal" class="close-btn">x</span></div>
+            <p class="modal-subtitle" id="modal-relic-name"></p>
+            
+            <div class="form-group">
+                <label>Prefix:</label>
+                <input type="text" id="input-prefix-search" list="prefix-datalist" placeholder="Type to search..." autocomplete="off">
+                <datalist id="prefix-datalist"></datalist>
+                
+                <div class="value-input-group hidden" id="prefix-val-group">
+                    <label>Value (<span id="prefix-range"></span>):</label>
+                    <input type="number" id="input-prefix-val">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Suffix:</label>
+                <input type="text" id="input-suffix-search" list="suffix-datalist" placeholder="Type to search..." autocomplete="off">
+                <datalist id="suffix-datalist"></datalist>
+                
+                <div class="value-input-group hidden" id="suffix-val-group">
+                    <label>Value (<span id="suffix-range"></span>):</label>
+                    <input type="number" id="input-suffix-val">
+                </div>
+            </div>
+
+            <button id="btn-apply-mods" class="confirm-btn" style="width: 100%; margin-top: 15px;">APPLY & SAVE</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
