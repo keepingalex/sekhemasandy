@@ -331,3 +331,19 @@ body {
         width: 200px;
     }
 }
+
+
+.palette-item.selected, .inventory-item.selected, .relic-instance.selected {
+    outline: 3px solid var(--gold);
+    outline-offset: 2px;
+    box-shadow: 0 0 15px var(--gold);
+    filter: brightness(1.2);
+}
+
+
+.grid-slot.placement-ready {
+    cursor: cell;
+}
+.grid-slot.placement-ready:hover {
+    background-color: rgba(212, 175, 55, 0.2);
+}

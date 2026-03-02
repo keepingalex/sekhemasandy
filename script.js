@@ -68,6 +68,7 @@ let instanceCounter = 0;
 let configCounter = 0;
 let currentlyDragging = null; 
 let craftingInstanceId = null;
+let selectedFromClick = null; 
 
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -120,7 +121,6 @@ function loadLayout(slotNum) {
     
     renderInventory(); 
     
-    
     const processedInsts = new Set();
     for (let slotId in gridState) {
         const instId = gridState[slotId];
@@ -136,11 +136,17 @@ function loadLayout(slotNum) {
             el.style.backgroundImage = `url('${base.imageUrl}')`;
             el.style.setProperty('--w', base.width);
             el.style.setProperty('--h', base.height);
+            
+            // EVENTOS HÍBRIDOS
             el.addEventListener('dragstart', () => {
                 currentlyDragging = { type: 'instance', id: instId, width: base.width, height: base.height };
                 setTimeout(() => el.classList.add('dragging'), 0);
             });
             el.addEventListener('dragend', () => el.classList.remove('dragging'));
+            el.addEventListener('click', (e) => {
+                e.stopPropagation();
+                handleSelectClick(el, { type: 'instance', id: instId, width: base.width, height: base.height });
+            });
             
             targetSlot.appendChild(el);
             updateTooltip(instId);
@@ -168,10 +174,14 @@ function generatePalette() {
         item.setAttribute('draggable', true);
         item.setAttribute('data-tooltip', base.name);
         
+        // EVENTOS HÍBRIDOS
         item.addEventListener('dragstart', () => {
             currentlyDragging = { type: 'palette', baseId: base.id, width: base.width, height: base.height };
         });
         item.addEventListener('dragend', clearHighlights);
+        item.addEventListener('click', () => {
+            handleSelectClick(item, { type: 'palette', baseId: base.id, width: base.width, height: base.height });
+        });
 
         if (base.isUnique) uniquesGrid.appendChild(item);
         else basesGrid.appendChild(item);
@@ -191,6 +201,7 @@ function generateGrid() {
 
             slot.addEventListener('dragover', handleDragOverGrid);
             slot.addEventListener('drop', handleDropOnGrid);
+            slot.addEventListener('click', () => handleSlotClick(slot.id)); // NUEVO
             gridContainer.appendChild(slot);
         }
     }
@@ -216,7 +227,6 @@ function renderInventory() {
         item.className = 'inventory-item';
         item.setAttribute('draggable', true);
         
-   
         let modsHtml = '';
         if (conf.prefix) {
             const pDef = MODIFIERS.prefixes.find(m => m.id === conf.prefix.id);
@@ -236,10 +246,14 @@ function renderInventory() {
             <div class="delete-config-btn" onclick="deleteConfig('${confId}')">x</div>
         `;
         
+        // EVENTOS HÍBRIDOS
         item.addEventListener('dragstart', () => {
             currentlyDragging = { type: 'config', configId: confId, width: base.width, height: base.height };
         });
         item.addEventListener('dragend', clearHighlights);
+        item.addEventListener('click', () => {
+            handleSelectClick(item, { type: 'config', configId: confId, width: base.width, height: base.height });
+        });
         list.appendChild(item);
     });
 }
@@ -268,7 +282,7 @@ function canPlace(slots, ignoreInstId) {
 }
 
 function clearHighlights() {
-    document.querySelectorAll('.grid-slot').forEach(el => el.classList.remove('dragover', 'drag-invalid'));
+    document.querySelectorAll('.grid-slot').forEach(el => el.classList.remove('dragover', 'drag-invalid', 'placement-ready'));
 }
 
 function handleDragOverGrid(e) {
@@ -322,15 +336,18 @@ function placeNewInstance(targetSlot, slotsIds, baseId) {
     el.style.setProperty('--w', base.width);
     el.style.setProperty('--h', base.height);
     
+    // EVENTOS HÍBRIDOS
     el.addEventListener('dragstart', () => {
         currentlyDragging = { type: 'instance', id: instId, width: base.width, height: base.height };
         setTimeout(() => el.classList.add('dragging'), 0);
     });
     el.addEventListener('dragend', () => el.classList.remove('dragging'));
+    el.addEventListener('click', (e) => {
+        e.stopPropagation();
+        handleSelectClick(el, { type: 'instance', id: instId, width: base.width, height: base.height });
+    });
 
     targetSlot.appendChild(el);
-    
-   
     updateGridVisuals();
 
     if (base.isUnique) {
@@ -358,11 +375,16 @@ function placeInstanceFromConfig(targetSlot, slotsIds, configId) {
     el.style.setProperty('--w', base.width);
     el.style.setProperty('--h', base.height);
     
+    // EVENTOS HÍBRIDOS
     el.addEventListener('dragstart', () => {
         currentlyDragging = { type: 'instance', id: instId, width: base.width, height: base.height };
         setTimeout(() => el.classList.add('dragging'), 0);
     });
     el.addEventListener('dragend', () => el.classList.remove('dragging'));
+    el.addEventListener('click', (e) => {
+        e.stopPropagation();
+        handleSelectClick(el, { type: 'instance', id: instId, width: base.width, height: base.height });
+    });
 
     targetSlot.appendChild(el);
     updateTooltip(instId);
@@ -371,15 +393,11 @@ function placeInstanceFromConfig(targetSlot, slotsIds, configId) {
 
 function moveExistingInstance(targetSlot, slotsIds, instId) {
     const el = document.getElementById(instId);
-    
     for (let key in gridState) { 
         if (gridState[key] === instId) delete gridState[key]; 
     }
-    
     slotsIds.forEach(id => gridState[id] = instId);
-    
     targetSlot.appendChild(el);
-    
     updateGridVisuals();
 }
 
@@ -393,10 +411,17 @@ function setupTrashZone() {
         tz.classList.remove('dragover');
         if (currentlyDragging && currentlyDragging.type === 'instance') removeInstance(currentlyDragging.id);
     });
+    tz.addEventListener('click', () => {
+        if(selectedFromClick && selectedFromClick.type === 'instance') {
+            removeInstance(selectedFromClick.id);
+            clearSelection();
+        }
+    });
 }
 
 function removeInstance(instId) {
-    document.getElementById(instId).remove();
+    const el = document.getElementById(instId);
+    if(el) el.remove();
     for (let key in gridState) { if (gridState[key] === instId) delete gridState[key]; }
     delete instances[instId];
     recalculateStats();
@@ -572,3 +597,53 @@ function updateGridVisuals() {
         }
     });
 }
+
+
+function handleSelectClick(element, data) {
+    if (selectedFromClick && (selectedFromClick.id === data.id || selectedFromClick.baseId === data.baseId || selectedFromClick.configId === data.configId)) {
+        clearSelection();
+        return;
+    }
+
+    clearSelection();
+    
+    selectedFromClick = { ...data, element: element };
+    element.classList.add('selected');
+    
+    if (data.type === 'instance') element.style.opacity = "0.5";
+    
+    document.querySelectorAll('.grid-slot:not(.locked)').forEach(s => s.classList.add('placement-ready'));
+}
+
+function handleSlotClick(slotId) {
+    if (!selectedFromClick) return;
+
+    const [_, r, c] = slotId.split('_').map(Number);
+    const slots = getSlots(r, c, selectedFromClick.width, selectedFromClick.height);
+    const targetSlot = document.getElementById(slotId);
+
+    if (canPlace(slots, selectedFromClick.id)) {
+        if (selectedFromClick.type === 'palette') {
+            placeNewInstance(targetSlot, slots, selectedFromClick.baseId);
+        } else if (selectedFromClick.type === 'config') {
+            placeInstanceFromConfig(targetSlot, slots, selectedFromClick.configId);
+        } else if (selectedFromClick.type === 'instance') {
+            moveExistingInstance(targetSlot, slots, selectedFromClick.id);
+        }
+        clearSelection();
+    } else {
+        targetSlot.classList.add('drag-invalid');
+        setTimeout(() => targetSlot.classList.remove('drag-invalid'), 300);
+    }
+}
+
+function clearSelection() {
+    if (selectedFromClick && selectedFromClick.element) {
+        selectedFromClick.element.classList.remove('selected');
+        selectedFromClick.element.style.opacity = "1";
+    }
+    selectedFromClick = null;
+    document.querySelectorAll('.grid-slot').forEach(s => s.classList.remove('placement-ready'));
+}
+
+window.addEventListener('keydown', (e) => { if (e.key === 'Escape') clearSelection(); });
