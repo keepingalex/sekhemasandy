@@ -20,10 +20,11 @@ body {
     background-attachment: fixed;
     background-color: var(--bg-main);
     color: var(--text-main);
-    font-family: var(--font-family);
+    font-family: var(--font-main);
     margin: 0;
     height: 100vh;
     display: flex;
+    overflow-x: hidden; 
 }
 
 .app-layout {
@@ -84,6 +85,7 @@ body {
     cursor: grab;
     transition: transform 0.1s;
     filter: drop-shadow(0 0 5px rgba(0,0,0,1));
+    touch-action: none;
 }
 .palette-item:active { cursor: grabbing; transform: scale(0.9); }
 
@@ -232,6 +234,7 @@ body {
     background-position: center;
     cursor: grab; z-index: 10;
     filter: drop-shadow(0 0 8px rgba(0,0,0,0.8));
+    touch-action: none;
 }
 
 
@@ -254,7 +257,7 @@ body {
 
 .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: flex; justify-content: center; align-items: center; z-index: 1000; }
 .modal.hidden { display: none; }
-.modal-content { background: var(--bg-panel); padding: 20px; border: 1px solid var(--gold); width: 400px; border-radius: 4px; }
+.modal-content { background: var(--bg-panel); padding: 20px; border: 1px solid var(--gold); width: 400px; border-radius: 4px; max-width: 90%; }
 .modal-header { display: flex; justify-content: space-between; font-weight: bold; color: var(--gold); font-size: 1.1rem;}
 .modal-subtitle { color: #aaa; font-style: italic; margin-top: 5px; margin-bottom: 20px;}
 .close-btn { cursor: pointer; color: #888; } .close-btn:hover { color: #fff; }
@@ -279,6 +282,7 @@ body {
     display: flex; align-items: center; gap: 10px; 
     background: #1a1a1a; padding: 5px; border: 1px solid #444; 
     border-radius: 4px; cursor: grab; position: relative;
+    touch-action: none;
 }
 .inventory-item:active { cursor: grabbing; transform: scale(0.98); border-color: var(--gold); }
 .inventory-item img { width: 35px; height: 35px; object-fit: contain; filter: drop-shadow(0 0 2px #000); }
@@ -290,3 +294,40 @@ body {
     cursor: pointer; font-size: 0.8rem; font-weight: bold;
 }
 .delete-config-btn:hover { color: red; }
+
+@media (max-width: 1000px) {
+    body { height: auto; min-height: 100vh; overflow-y: auto; }
+    
+    .app-layout { flex-direction: column; }
+    
+    .sidebar-left, .sidebar-right {
+        width: 100%;
+        max-width: 100%;
+        overflow-y: visible; 
+    }
+    
+    .center-stage { padding: 20px 10px; }
+    
+    .poe-altar-frame {
+        width: 100%;
+        max-width: 400px; 
+    }
+
+    .poe-pillar { width: 25px; }
+    .poe-grid-surround { padding: 10px 5px 15px 5px; }
+
+    .grid-container {
+        grid-template-columns: repeat(5, minmax(45px, 1fr));
+        grid-template-rows: repeat(4, 55px); 
+    }
+    
+    .grid-slot.hard-locked::before { width: 25px; height: 25px; }
+
+
+    .relic-instance:hover::after, .palette-item:hover::after {
+        left: 50%;
+        top: 100%;
+        transform: translate(-50%, 10px);
+        width: 200px;
+    }
+}
